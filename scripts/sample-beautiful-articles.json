@@ -1,0 +1,127 @@
+[
+  {
+    "local_book_id": "book_001",
+    "book_name": "新概念英语第一册",
+    "unit_id": "unit_001",
+    "title": "A Private Conversation",
+    "sentences": [
+      {
+        "content": "Last week I went to the theatre.",
+        "translation": "上周我去看戏。",
+        "type": "text"
+      },
+      {
+        "content": "I had a very good seat.",
+        "translation": "我的座位很好。",
+        "type": "text"
+      },
+      {
+        "content": "The play was very interesting.",
+        "translation": "戏很有趣。",
+        "type": "text"
+      },
+      {
+        "content": "I did not enjoy it.",
+        "translation": "但我并不欣赏。",
+        "type": "text"
+      },
+      {
+        "content": "A young man and a young woman were sitting behind me.",
+        "translation": "一个青年男子和一个青年女子坐在我的身后。",
+        "type": "text"
+      }
+    ],
+    "image": "https://example.com/images/theatre.jpg"
+  },
+  {
+    "local_book_id": "book_001",
+    "book_name": "新概念英语第一册",
+    "unit_id": "unit_002",
+    "title": "Breakfast or Lunch?",
+    "sentences": [
+      {
+        "content": "It was Sunday.",
+        "translation": "那是个星期天。",
+        "type": "text"
+      },
+      {
+        "content": "I never get up early on Sundays.",
+        "translation": "在星期天我是从来不早起的。",
+        "type": "text"
+      },
+      {
+        "content": "I sometimes stay in bed until lunch time.",
+        "translation": "有时我要一直躺到吃午饭的时候。",
+        "type": "text"
+      },
+      {
+        "content": "Last Sunday I got up very late.",
+        "translation": "上个星期天，我起得很晚。",
+        "type": "text"
+      },
+      {
+        "content": "I looked out of the window.",
+        "translation": "我望望窗外。",
+        "type": "text"
+      }
+    ],
+    "image": "https://example.com/images/sunday.jpg"
+  },
+  {
+    "local_book_id": "book_002",
+    "book_name": "新概念英语第二册",
+    "unit_id": "unit_001",
+    "title": "A Puma at Large",
+    "sentences": [
+      {
+        "content": "Pumas are large, cat-like animals which are found in America.",
+        "translation": "美洲狮是一种体形似猫的大动物，产于美洲。",
+        "type": "text"
+      },
+      {
+        "content": "When reports came into London Zoo that a wild puma had been spotted forty-five miles south of London, they were not taken seriously.",
+        "translation": "当伦敦动物园接到报告说，在伦敦以南45英里处发现一只野生的美洲狮时，这些报告并没有受到重视。",
+        "type": "text"
+      },
+      {
+        "content": "However, as the evidence began to accumulate, experts from the Zoo felt obliged to investigate.",
+        "translation": "然而，随着证据越来越多，动物园的专家们感到有必要进行一番调查。",
+        "type": "text"
+      }
+    ],
+    "image": "https://example.com/images/puma.jpg"
+  },
+  {
+    "local_book_id": "book_003",
+    "book_name": "英语口语教程",
+    "unit_id": "unit_001",
+    "title": "Daily Conversation",
+    "sentences": [
+      {
+        "content": "Good morning! How are you today?",
+        "translation": "早上好！你今天怎么样？",
+        "type": "voice",
+        "media_url": "https://example.com/audio/good_morning.mp3"
+      },
+      {
+        "content": "I'm fine, thank you. And you?",
+        "translation": "我很好，谢谢。你呢？",
+        "type": "voice",
+        "media_url": "https://example.com/audio/im_fine.mp3"
+      },
+      {
+        "content": "What's the weather like today?",
+        "translation": "今天天气怎么样？",
+        "type": "text"
+      },
+      {
+        "content": "It's sunny and warm.",
+        "translation": "阳光明媚，很温暖。",
+        "type": "text"
+      }
+    ],
+    "image": "https://example.com/images/weather.jpg"
+  }
+]
+
+

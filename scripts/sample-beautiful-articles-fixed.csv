@@ -1,0 +1,5 @@
+local_book_id,book_name,unit_id,title,sentences_json,image
+book_003,英语口语教程,unit_001,Daily Conversation,"[{""content"":""Good morning! How are you today?"",""translation"":""早上好！你今天怎么样？"",""type"":""voice"",""media_url"":""https://example.com/audio/good_morning.mp3""},{""content"":""I'm fine, thank you. And you?"",""translation"":""我很好，谢谢。你呢？"",""type"":""voice"",""media_url"":""https://example.com/audio/im_fine.mp3""},{""content"":""What's the weather like today?"",""translation"":""今天天气怎么样？"",""type"":""text""},{""content"":""It's sunny and warm."",""translation"":""阳光明媚，很温暖。"",""type"":""text""}]",https://example.com/images/weather.jpg
+book_004,英语语法教程,unit_001,Present Tense,"[{""content"":""I am a student."",""translation"":""我是一个学生。"",""type"":""text""},{""content"":""You are my friend."",""translation"":""你是我的朋友。"",""type"":""text""},{""content"":""He is tall."",""translation"":""他很高。"",""type"":""text""}]",https://example.com/images/grammar.jpg
+
+
