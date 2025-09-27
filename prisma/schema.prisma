@@ -1,0 +1,698 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator prismabox {
+  provider                    = "prismabox"
+  typeboxImportDependencyName = "elysia"
+  typeboxImportVariableName   = "t"
+  inputModel                  = true
+  output                      = "../generated/prismabox"
+}
+
+// 用户表
+
+model User {
+  id             String   @id @default(cuid())
+  // phone          String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  isActive       Boolean  @default(true)
+  disabledReason String?
+
+  // 会员信息
+  memberExpireAt DateTime?
+  memberRecords  MemberRecord[]
+
+  // 登录记录
+  loginLogs LoginLog[]
+
+  // 用户设备
+  userDevices UserDevice[]
+
+  // 激活码使用记录
+  activationRecords ActivationRecord[]
+
+  // 退款申请记录
+  refundRequests RefundRequest[]
+
+  name          String    @db.Text @default("")
+  email         String    @default("")
+  emailVerified Boolean   @default(false)
+  image         String?   @db.Text
+  sessions      Session[]
+  accounts      Account[]
+
+  phoneNumber         String?
+  phoneNumberVerified Boolean?
+
+  role       String?   @db.Text
+  banned     Boolean?  @default(false)
+  banReason  String?   @db.Text
+  banExpires DateTime?
+
+  @@map("users")
+  @@unique([email])
+  @@unique([phoneNumber])
+}
+
+// 商户表
+
+model Merchant {
+  id             String         @id @default(cuid())
+  adminId        String
+  admin          Admin          @relation(fields: [adminId], references: [id])
+  name           String
+  code           String         @unique
+  contact        String
+  phone          String         @unique
+  passwordHash   String?
+  passwordSalt   String?
+  bankAccount    String?
+  status         MerchantStatus @default(PENDING)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  disabledReason String?
+
+  // 激活码库存
+  activationCodes ActivationCode[]
+
+  // 购买记录
+  purchases Purchase[]
+
+  // 奖励记录
+  rewards Reward[]
+
+  // 登录记录
+  loginLogs MerchantLoginLog[]
+
+  // 退款申请记录
+  refundRequests RefundRequest[]
+
+  @@map("merchants")
+}
+
+// 激活码表
+
+model ActivationCode {
+  id        String               @id @default(cuid())
+  code      String               @unique
+  duration  String
+  status    ActivationCodeStatus @default(AVAILABLE)
+  expiresAt DateTime?
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  // 关联商户
+  merchantId String?
+  merchant   Merchant? @relation(fields: [merchantId], references: [id])
+
+  // 使用记录
+  activationRecord ActivationRecord?
+
+  // 退款记录
+  refundRequests RefundRequest[]
+
+  @@map("activation_codes")
+}
+
+// 激活记录表
+
+model ActivationRecord {
+  id               String           @id @default(cuid())
+  userId           String
+  user             User             @relation(fields: [userId], references: [id])
+  activationCodeId String           @unique
+  activationCode   ActivationCode   @relation(fields: [activationCodeId], references: [id])
+  activatedAt      DateTime         @default(now())
+  status           ActivationStatus @default(SUCCESS)
+  errorMessage     String?
+
+  @@map("activation_records")
+}
+
+// 会员记录表
+
+model MemberRecord {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  type      MemberRecordType
+  duration  Int // 天数
+  startDate DateTime
+  endDate   DateTime
+  reason    String?
+  createdAt DateTime         @default(now())
+
+  @@map("member_records")
+}
+
+// 购买记录表
+
+model Purchase {
+  id            String         @id @default(cuid())
+  merchantId    String
+  merchant      Merchant       @relation(fields: [merchantId], references: [id])
+  duration      String
+  quantity      Int
+  unitPrice     Decimal
+  totalAmount   Decimal
+  status        PurchaseStatus @default(PENDING)
+  paymentMethod PaymentMethod?
+  paymentTime   DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@map("purchases")
+}
+
+// 奖励记录表
+
+model Reward {
+  id          String      @id @default(cuid())
+  merchantId  String
+  merchant    Merchant    @relation(fields: [merchantId], references: [id])
+  month       String // 格式: YYYY-MM
+  dailySales  Int
+  rewardLevel RewardLevel
+  quantity    Int
+  createdAt   DateTime    @default(now())
+
+  @@map("rewards")
+}
+
+// 退款申请表
+
+model RefundRequest {
+  id               String         @id @default(cuid())
+  userId           String
+  user             User           @relation(fields: [userId], references: [id])
+  merchantId       String
+  merchant         Merchant       @relation(fields: [merchantId], references: [id])
+  activationCodeId String
+  activationCode   ActivationCode @relation(fields: [activationCodeId], references: [id])
+  status           RefundStatus   @default(PENDING)
+  reason           String?
+  evidence         String? // 退款凭证
+  processedAt      DateTime?
+  processedBy      String? // 处理人ID
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@map("refund_requests")
+}
+
+// 验证码记录表
+
+model VerificationCode {
+  id        String               @id @default(cuid())
+  phone     String
+  code      String
+  type      VerificationCodeType
+  expiresAt DateTime
+  used      Boolean              @default(false)
+  createdAt DateTime             @default(now())
+
+  @@map("verification_codes")
+}
+
+// 操作日志表
+
+model OperationLog {
+  id           String        @id @default(cuid())
+  operatorId   String? // 操作人ID
+  operatorType OperatorType // 操作人类型
+  operation    OperationType
+  targetId     String? // 操作目标ID
+  targetType   String? // 操作目标类型
+  details      String? // 操作详情
+  ip           String?
+  createdAt    DateTime      @default(now())
+
+  @@map("operation_logs")
+}
+
+// 消息通知表
+
+model Notification {
+  id            String           @id @default(cuid())
+  recipientId   String
+  recipientType RecipientType
+  type          NotificationType
+  title         String
+  content       String
+  read          Boolean          @default(false)
+  sentAt        DateTime         @default(now())
+  readAt        DateTime?
+
+  @@map("notifications")
+}
+
+// 登录记录表
+
+model LoginLog {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  ip        String?
+  device    String?
+  status    LoginStatus
+  createdAt DateTime    @default(now())
+
+  @@map("login_logs")
+}
+
+// 商户登录记录表
+
+model MerchantLoginLog {
+  id         String      @id @default(cuid())
+  merchantId String
+  merchant   Merchant    @relation(fields: [merchantId], references: [id])
+  ip         String?
+  device     String?
+  status     LoginStatus
+  createdAt  DateTime    @default(now())
+
+  @@map("merchant_login_logs")
+}
+
+// 系统配置表
+
+model SystemConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_configs")
+}
+
+// 价格配置表
+
+model PriceConfig {
+  id            String   @id @default(cuid())
+  duration      String
+  userPrice     Decimal // 用户购买价
+  merchantPrice Decimal // 商户采购价
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([duration, isActive])
+  @@map("price_configs")
+}
+
+// 奖励规则配置表
+
+model RewardRule {
+  id             String      @id @default(cuid())
+  level          RewardLevel
+  minDailySales  Int
+  maxDailySales  Int?
+  rewardQuantity Int
+  isPeakSeason   Boolean     @default(false)
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@map("reward_rules")
+}
+
+// 旺季配置表
+
+model PeakSeason {
+  id         String   @id @default(cuid())
+  name       String
+  startMonth Int // 1-12
+  endMonth   Int // 1-12
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@map("peak_seasons")
+}
+
+// 枚举类型
+
+enum MerchantStatus {
+  PENDING // 待审核
+  ACTIVE // 正常
+  DISABLED // 禁用
+}
+
+enum ActivationCodeStatus {
+  AVAILABLE // 可用
+  ASSIGNED // 已分配
+  USED // 已使用
+  RECYCLED // 已回收
+}
+
+enum ActivationStatus {
+  SUCCESS
+  FAILED
+}
+
+enum MemberRecordType {
+  FIRST_LOGIN // 首次登录赠送
+  ACTIVATION // 激活码激活
+  MANUAL_ADJUST // 手动调整
+  REFUND // 退款
+}
+
+enum PurchaseStatus {
+  PENDING // 待支付
+  PAID // 已支付
+  APPROVED // 已审核
+  CANCELLED // 已取消
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER // 对公转账
+  ALIPAY // 支付宝
+  WECHAT // 微信支付
+}
+
+enum RewardLevel {
+  BASIC // 基础层
+  ADVANCED // 进阶层
+  PEAK // 旺季层
+  TOP // 头部层
+}
+
+enum LoginStatus {
+  SUCCESS
+  FAILED
+}
+
+enum RefundStatus {
+  PENDING // 待处理
+  APPROVED // 已同意
+  REJECTED // 已拒绝
+  COMPLETED // 已完成
+}
+
+enum VerificationCodeType {
+  LOGIN // 登录验证码
+  REGISTER // 注册验证码
+  RESET // 重置验证码
+  MEMBER_EXPIRY // 会员到期提醒
+  ACTIVATION_SUCCESS // 激活码激活成功
+  STOCK_LOW // 激活码库存不足
+  MERCHANT_APPROVED // 商户申请通过
+  REWARD_RECEIVED // 奖励领取
+}
+
+enum OperationType {
+  USER_MANAGEMENT
+  MERCHANT_MANAGEMENT
+  SYSTEM_SETTINGS
+  AUTHENTICATION
+  ACTIVATION_CODE_USAGE
+  ACTIVATION_CODE_MANAGEMENT
+  LOGIN
+  DELETE_MERCHANT
+  CREATE_MERCHANT
+  UPDATE_MERCHANT
+  DELETE_USER
+  CREATE_USER
+  UPDATE_USER
+  DELETE_ACTIVATION_CODE
+  CREATE_ACTIVATION_CODE
+  DELETE_PRICE_CONFIG
+  CREATE_PRICE_CONFIG
+  UPDATE_PRICE_CONFIG
+  DELETE_REWARD_RULE
+  CREATE_REWARD_RULE
+  UPDATE_REWARD_RULE
+  DELETE_PEAK_SEASON
+  CREATE_PEAK_SEASON
+  UPDATE_PEAK_SEASON
+  DELETE_NOTIFICATION
+  CREATE_NOTIFICATION
+  UPDATE_NOTIFICATION
+  UPDATE_REWARD_RULES
+  ADJUST_MEMBERSHIP
+  ADJUST_REWARD_RULES
+  ADJUST_PEAK_SEASON
+  ADJUST_NOTIFICATION
+  ADJUST_PRICE_CONFIG
+  ADJUST_REWARD_RULE
+  ENABLE_USER
+  DISABLE_USER
+}
+
+enum OperatorType {
+  USER
+  MERCHANT
+  ADMIN
+  SYSTEM
+}
+
+enum NotificationType {
+  MEMBER_EXPIRY
+  ACTIVATION_SUCCESS
+  REFUND_REQUEST
+  REFUND_APPROVED
+  REFUND_REJECTED
+  REWARD_RECEIVED
+  STOCK_LOW
+  MERCHANT_APPROVED
+  MERCHANT_REJECTED
+  SYSTEM_ALERT
+}
+
+enum RecipientType {
+  USER
+  MERCHANT
+  ADMIN
+}
+
+// 超级管理员/后台用户表
+
+model Admin {
+  id           String    @id @default(cuid())
+  phone        String    @unique
+  name         String
+  password     String? // 预留，用于密码登录
+  role         AdminRole @default(ADMIN)
+  passwordHash String
+  passwordSalt String
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // 关联商户
+  merchants Merchant[]
+
+  @@map("admins")
+}
+
+// 用户设备表 - 管理用户登录设备
+
+model UserDevice {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId    String // 设备唯一标识（设备指纹）
+  deviceName  String? // 设备名称（如：iPhone 13, Chrome on Windows等）
+  deviceType  String? // 设备类型（mobile, desktop, tablet等）
+  userAgent   String? // 用户代理字符串
+  ip          String? // 最后登录IP
+  isActive    Boolean  @default(true) // 设备是否激活
+  lastLoginAt DateTime @default(now()) // 最后登录时间
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 确保每个用户的每个设备只有一条记录
+  @@unique([userId, deviceId])
+  @@map("user_devices")
+}
+
+enum AdminRole {
+  SUPER_ADMIN // 超级管理员
+  ADMIN // 普通管理员
+}
+
+// 词典表 - ECDICT 英汉词典数据
+
+model Dictionary {
+  id          String   @id @default(cuid())
+  word        String   @unique // 单词
+  phonetic    String? // 音标
+  definition  String? // 英文释义
+  translation String? // 中文翻译
+  pos         String? // 词性
+  collins     Int? // 柯林斯星级
+  oxford      Int? // 牛津核心词汇
+  tag         String? // 标签
+  bnc         Int? // 英国国家语料库词频
+  frq         Int? // 当代语料库词频
+  exchange    String? // 词形变化
+  detail      String? // 详细释义
+  audio       String? // 音频文件
+  sw          String? // strip-word 用于模糊匹配
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联详细数据
+  wordDetail WordDetail?
+
+  @@index([word])
+  @@index([sw])
+  @@map("dictionary")
+}
+
+// 词汇详细数据表 - 存储AI生成的补充数据
+
+model WordDetail {
+  id     String     @id @default(cuid())
+  wordId String     @unique // 关联词典表
+  word   Dictionary @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  // 近义词和反义词
+  synonyms String? // JSON格式存储近义词数组
+  antonyms String? // JSON格式存储反义词数组
+
+  // 固定搭配
+  collocations String? // JSON格式存储固定搭配
+
+  // 同根词
+  cognates String? // JSON格式存储同根词
+
+  // 词源信息
+  etymology String? // 词源说明
+
+  // 例句
+  examples String? // JSON格式存储例句数组
+
+  // 词频等级 (1-5, 1最常用, 5最不常用)
+  frequencyLevel Int?
+
+  // 学习难度 (1-5, 1最简单, 5最难)
+  difficultyLevel Int?
+
+  // 相关词汇
+  relatedWords String? // JSON格式存储相关词汇
+
+  // 词形变化详情
+  wordForms String? // JSON格式存储详细词形变化
+
+  // 学习建议
+  studyTips String? // 学习建议和记忆技巧
+
+  // 常见错误
+  commonMistakes String? // 常见使用错误
+
+  // 文化背景
+  culturalContext String? // 文化背景知识
+
+  // 历年真题
+  examQuestions String? // JSON格式存储历年真题
+
+  // 生成状态
+  isGenerated Boolean   @default(false)
+  generatedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("word_details")
+}
+
+// 情境美文表
+
+model BeautifulArticle {
+  id          String   @id @default(cuid())
+  localBookId String // 本地书籍ID
+  bookName    String // 书籍名称
+  unitId      String // 单元ID
+  title       String // 美文标题
+  sentences   Json // JSON格式存储句子数组
+  image       String? // 图片URL
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([unitId])
+  @@index([localBookId])
+  @@map("beautiful_articles")
+}
+
+model TextBook {
+  id        String   @id @default(cuid())
+  name      String
+  typeName  String?
+  stageName String?
+  units     Unit[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("text_books")
+}
+
+model Unit {
+  id         String   @id @default(cuid())
+  textBookId String
+  textBook   TextBook @relation(fields: [textBookId], references: [id])
+  name       String
+  words      Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("units")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?  @db.Text
+  userAgent String?  @db.Text
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  impersonatedBy String? @db.Text
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String    @db.Text
+  providerId            String    @db.Text
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  idToken               String?   @db.Text
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?   @db.Text
+  password              String?   @db.Text
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String   @db.Text
+  value      String   @db.Text
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@map("verification")
+}

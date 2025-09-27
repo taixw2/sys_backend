@@ -1,0 +1,1 @@
+journalctl -u english-admin-backend.service -f
